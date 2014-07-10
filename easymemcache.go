@@ -8,18 +8,21 @@ import (
 
 func New(server string) Client {
 	var c Client
-	c.client = memcache.New(server)
-	c.keys = make(map[string]int)
-	c.prefix = ""
+	c.MClient = memcache.New(server)
+	c.KeyList = make(map[string]int)
+	c.Prefix = ""
 	return c
 }
 
 type Client struct {
-	client *memcache.Client
-	keys map[string]int
-	prefix string
+	MClient *memcache.Client
+	KeyList   map[string]int
+	Prefix string
 }
 
+func (c Client) Print() {
+	print("Prefix:" + c.Prefix + "\n")
+}
 func (c Client) Set(key string, i interface{}) error {
 	var timeout int32 = 86400
 	err := c.SetTime(key, i, timeout)
@@ -28,47 +31,67 @@ func (c Client) Set(key string, i interface{}) error {
 func (c Client) SetTime(key string, i interface{}, t int32) (err error) {
 	key = strings.Replace(key, " ", "_", -1)
 	b, err := json.Marshal(i)
-	//add it to the list of keys
-	c.keys[key]=1
 	if err != nil {
 		return err
 	}
-	err = c.client.Set(&memcache.Item{Key: c.prefix+key, Value: []byte(b), Expiration: t})
+	//add it to the list of keys
+	c.KeyList[key] = 1
+	err = c.MClient.Set(&memcache.Item{Key: c.Prefix + key, Value: []byte(b), Expiration: t})
 	return err
 }
 func (c Client) Get(key string, i interface{}) error {
 	key = strings.Replace(key, " ", "_", -1)
-	thing, err := c.client.Get(c.prefix+key)
+	thing, err := c.MClient.Get(c.Prefix + key)
 	if err != nil {
 		return err
 	}
 	err = json.Unmarshal(thing.Value, &i)
 	return err
 }
+func (c Client) Gets(key string) (s string, err error) {
+	err = c.Get(key, &s)
+	return s, err
+}
+func (c Client) Geti(key string) (i int, err error) {
+	err = c.Get(key, &i)
+	return i, err
+}
+func (c Client) Count() (i int) {
+	return len(c.KeyList)
+}
 func (c Client) Delete(key string) (err error) {
-	err = c.client.Delete(key)
-	delete(c.keys, key)
+	err = c.MClient.Delete(key)
+	delete(c.KeyList, key)
+	return err
+}
+func (c Client) DeleteAll() (err error) {
+	for k := range c.KeyList {
+		err = c.Delete(k)
+		if err != nil {
+			return err
+		}
+	}
 	return err
 }
 func (c Client) Keys() []string {
 	var keys []string
-	for k := range c.keys {
+	for k := range c.KeyList {
 		keys = append(keys, k)
 	}
 	return keys
 }
 func (c Client) Find(s string) (rl []string) {
-	for i,_ := range c.keys {
-		if strings.Contains(i,s) {
-			rl = append(rl,i)
+	for i, _ := range c.KeyList {
+		if strings.Contains(i, s) {
+			rl = append(rl, i)
 		}
 	}
 	return rl
 }
 func (c Client) StartsWith(s string) (rl []string) {
-	for i,_ := range c.keys {
-		if strings.HasPrefix(i,s) {
-			rl = append(rl,i)
+	for i, _ := range c.KeyList {
+		if strings.HasPrefix(i, s) {
+			rl = append(rl, i)
 		}
 	}
 	return rl

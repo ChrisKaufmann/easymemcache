@@ -36,6 +36,19 @@ func TestAll(t *testing.T) {
 	err = mc.Get("setwithgettime2", &ts)
 	if err == nil {t.Errorf("setwithgettime2 should have been nil", err) }
 
+	//getstring
+	swgstr,err := mc.Gets("setwithget")
+	if err != nil { t.Errorf("gets err", err) }
+	if swgstr != "setwithgetval" { t.Errorf("gets bad value", err) }
+
+	//getint
+	mc.Set("inttest",3)
+	swgint, err := mc.Geti("inttest")
+	if err != nil { t.Errorf("geti err", err) }
+	if swgint != 3 { t.Errorf("geti bad value", err) }
+	mc.Delete("inttest")
+
+
 	//test delete
 	mc.Delete("setwithgettime2")
 	err = mc.Get("setwithgettime2", &ts)
@@ -63,6 +76,16 @@ func TestAll(t *testing.T) {
 	swf := mc.StartsWith("shouldn'texist")
 	if len(swf) != 0 {t.Error("Wrong number of keys for startswith shouldn't exist", err) }
 
+	//Count
+	c := mc.Count()
+	if c < 1 {t.Error("Bad count of keys", err) }
+
+	//test deleteall
+	mc.DeleteAll()
+	nokeylist := mc.Keys()
+	if len(nokeylist) > 0 { t.Error("Too many keys after delete", err) }
+	zeroc := mc.Count()
+	if zeroc != 0 {t.Error("Bad count after deleteall", err) }
 }
 
 func allvals(s []string) []string {
