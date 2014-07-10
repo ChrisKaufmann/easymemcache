@@ -46,6 +46,19 @@ func TestAll(t *testing.T) {
 	swgint, err := mc.Geti("inttest")
 	if err != nil { t.Errorf("geti err", err) }
 	if swgint != 3 { t.Errorf("geti bad value", err) }
+
+	//increment
+	mc.Increment("inttest",1)
+	swgint, err = mc.Geti("inttest")
+	if err != nil { t.Errorf("increment err", err) }
+	if swgint != 4 { t.Errorf("increment bad value", err) }
+
+	//decrement
+	mc.Decrement("inttest",2)
+	swgint, err = mc.Geti("inttest")
+	if err != nil { t.Errorf("decrement err", err) }
+	if swgint != 2 { t.Errorf("decrement bad value", err) }
+
 	mc.Delete("inttest")
 
 

@@ -39,6 +39,12 @@ func (c Client) SetTime(key string, i interface{}, t int32) (err error) {
 	err = c.MClient.Set(&memcache.Item{Key: c.Prefix + key, Value: []byte(b), Expiration: t})
 	return err
 }
+func (c Client) Increment(key string, incr uint64) {
+	c.MClient.Increment(c.Prefix+key,incr)
+}
+func (c Client) Decrement(key string, decr uint64) {
+	c.MClient.Decrement(c.Prefix+key,decr)
+}
 func (c Client) Get(key string, i interface{}) error {
 	key = strings.Replace(key, " ", "_", -1)
 	thing, err := c.MClient.Get(c.Prefix + key)

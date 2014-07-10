@@ -1,6 +1,6 @@
 package main
 
-import "easymemcache"
+import "github.com/ChrisKaufmann/easymemcache"
 import "fmt"
 import "os/exec"
 import "strconv"
