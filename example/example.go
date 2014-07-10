@@ -46,6 +46,16 @@ func main() {
 	}
 	print("A Number" + strconv.Itoa(a) + "\n")
 
+	//Increment and decrement a key
+	a,_ = mc.Geti("A_Number")
+	print("Before Increment: "+strconv.Itoa(a)+"\n")
+	mc.Increment("A_Number",1)
+	a,_ = mc.Geti("A_Number")
+	print("After Increment: "+strconv.Itoa(a)+"\n")
+	mc.Decrement("A_Number",11)
+	a,_ = mc.Geti("A_Number")
+	print("After Decrement: "+strconv.Itoa(a)+"\n")
+
 	//Setting and retrieving a struct
 	mt := mything{
 		Number:    33,
