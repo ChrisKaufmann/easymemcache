@@ -67,7 +67,8 @@ func (c Client) Count() (i int) {
 }
 func (c Client) Delete(otherkeys ...string) (err error) {
 	for _,k := range otherkeys {
-		err = c.MClient.Delete(k)
+		k = strings.Replace(k, " ", "_", -1)
+		err = c.MClient.Delete(c.Prefix+k)
 		delete(c.KeyList, k)
 		if err != nil {return err}
 	}
