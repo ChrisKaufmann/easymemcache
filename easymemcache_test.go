@@ -58,7 +58,6 @@ func TestAll(t *testing.T) {
 	swgint, err = mc.Geti("inttest")
 	if err != nil { t.Errorf("decrement err", err) }
 	if swgint != 2 { t.Errorf("decrement bad value", err) }
-
 	mc.Delete("inttest")
 
 
@@ -66,6 +65,12 @@ func TestAll(t *testing.T) {
 	mc.Delete("setwithgettime2")
 	err = mc.Get("setwithgettime2", &ts)
 	if err == nil {t.Errorf("Delete didn't work, got key for setwithgettime2", err) }
+	//and multiple delete
+	mc.Set("delete1",1)
+	mc.Set("delete2",2)
+	mc.Delete("delete1","delete2")
+	_,err = mc.Geti("delete2")
+	if err == nil {t.Errorf("Multiple delete didn't work, got key for delete2", err) }
 
 	//At this point, the list of keys should have just the first 3 as values (last was deleted)
 	tk := []string{"test", "setwithget", "setwithgettime"}
@@ -99,6 +104,17 @@ func TestAll(t *testing.T) {
 	if len(nokeylist) > 0 { t.Error("Too many keys after delete", err) }
 	zeroc := mc.Count()
 	if zeroc != 0 {t.Error("Bad count after deleteall", err) }
+
+	//test deletelike - first add some
+	mc.Set("shouldDELETEme",3)
+	mc.Set("AlsoDELETEme","uh huh")
+	mc.Set("DELETEmetoo",1)
+	mc.Set("finallyDELETE","also")
+	tfl = mc.Find("DELETE")
+	if len(tfl) < 4 { t.Error("Wrong number of found in testdelete", err) }
+	mc.DeleteLike("DELETE")
+	tfl = mc.Find("DELETE")
+	if len(tfl) != 0 { t.Error("Didn't get zero after deleting and re-finding", err) }
 }
 
 func allvals(s []string) []string {

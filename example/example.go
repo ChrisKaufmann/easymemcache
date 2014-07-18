@@ -93,12 +93,30 @@ func main() {
 		print("\t" + i + "\n")
 	}
 
+	//deleting a list
+	print("Deleting the previous list\n")
+	mc.Delete(el...)
+	el = mc.Find("letter")
+	print("List of keys with 'letter' in the name now\n")
+	for _, i := range el {
+		print("\t" + i + "\n")
+	}
+
 	//Get keys that start with "A"
 	print("List of keys that start with 'A'\n")
 	el = mc.StartsWith("A")
 	for _, i := range el {
 		print("\t" + i + "\n")
 	}
+
+	//Deleting keys that have "A" in them
+	print("Deleting keys that have 'A'\n")
+	mc.DeleteLike("A")
+	el = mc.StartsWith("A")
+	for _, i := range el {
+		print("\t" + i + "\n")
+	}
+
 
 	//Deleting all
 	print("Deleting all keys\n")

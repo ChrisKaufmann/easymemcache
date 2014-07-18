@@ -65,9 +65,24 @@ func (c Client) Geti(key string) (i int, err error) {
 func (c Client) Count() (i int) {
 	return len(c.KeyList)
 }
-func (c Client) Delete(key string) (err error) {
-	err = c.MClient.Delete(key)
-	delete(c.KeyList, key)
+func (c Client) Delete(otherkeys ...string) (err error) {
+//	err = c.MClient.Delete(key)
+//	delete(c.KeyList, key)
+	for _,k := range otherkeys {
+		err = c.MClient.Delete(k)
+		delete(c.KeyList, k)
+		if err != nil {return err}
+	}
+	return err
+}
+func (c Client) DeleteLike(s string) (err error) {
+	kl := c.Find(s)
+	for _,k := range kl {
+		err = c.Delete(k)
+		if err != nil {
+			return err
+		}
+	}
 	return err
 }
 func (c Client) DeleteAll() (err error) {
