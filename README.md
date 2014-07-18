@@ -21,6 +21,8 @@ Update with 'go get -u github.com/ChrisKaufmann/easymemcache'
 		mc := easymemcache.New("localhost:11211")
 		mc.Set("my_key","my value")
 		mystr := mc.Gets("my_key")
+		mc.Set("My_int_key": 32)
+		myint := mc.Geti("My_int_key")
 
 		// For structs, or really any data:
 		var mything structtype

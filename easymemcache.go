@@ -66,8 +66,6 @@ func (c Client) Count() (i int) {
 	return len(c.KeyList)
 }
 func (c Client) Delete(otherkeys ...string) (err error) {
-//	err = c.MClient.Delete(key)
-//	delete(c.KeyList, key)
 	for _,k := range otherkeys {
 		err = c.MClient.Delete(k)
 		delete(c.KeyList, k)
@@ -92,6 +90,7 @@ func (c Client) DeleteAll() (err error) {
 			return err
 		}
 	}
+	err=c.MClient.DeleteAll()
 	return err
 }
 func (c Client) Keys() []string {
