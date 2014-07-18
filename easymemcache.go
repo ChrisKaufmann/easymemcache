@@ -80,6 +80,7 @@ func (c Client) DeleteLike(s string) (err error) {
 		if err != nil {
 			return err
 		}
+		delete(c.KeyList, k)
 	}
 	return err
 }
