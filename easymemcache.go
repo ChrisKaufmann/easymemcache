@@ -54,6 +54,13 @@ func (c Client) Get(key string, i interface{}) error {
 	err = json.Unmarshal(thing.Value, &i)
 	return err
 }
+func (c Client) GetOr(key string, i interface{}, f func()) {
+	err := c.Get(key, i)
+	if err != nil {
+		f()
+		c.Set(key,i)
+	}
+}
 func (c Client) Gets(key string) (s string, err error) {
 	err = c.Get(key, &s)
 	return s, err

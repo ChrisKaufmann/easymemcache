@@ -115,6 +115,14 @@ func TestAll(t *testing.T) {
 	mc.DeleteLike("DELETE")
 	tfl = mc.Find("DELETE")
 	if len(tfl) != 0 { t.Error("Didn't get zero after deleting and re-finding", err) }
+
+	//getor - get a keyval or set it using an anonymous function
+	var togetor int
+	mc.GetOr("togetor", &togetor, func() {togetor=3})
+	if togetor != 3 { t.Error("GetOr didn't set variable ", err) }
+	var togetor2 int
+	mc.Get("togetor",&togetor2)
+	if togetor2 != 3 {t.Error("GetOr didn't get cached variable", err) }
 }
 
 func allvals(s []string) []string {
