@@ -9,19 +9,44 @@ import (
 func New(server string) Client {
 	var c Client
 	c.MClient = memcache.New(server)
-	c.KeyList = make(map[string]int)
 	c.Prefix = ""
 	return c
 }
 
 type Client struct {
 	MClient *memcache.Client
-	KeyList   map[string]int
 	Prefix string
 }
 
 func (c Client) Print() {
 	print("Prefix:" + c.Prefix + "\n")
+}
+func (c Client) KeyList(kp ...string) (l map[string]int) {
+	var mykey = "easymemcache_keys"
+	if l == nil {l=make(map[string]int)}
+	if len(kp) > 0 {
+		var k string
+		k = kp[0]
+		print("Key "+k+"\n")
+		l = c.KeyList()
+		l[k]=1
+		b, err := json.Marshal(l)
+		err = c.MClient.Set(&memcache.Item{Key: mykey, Value:  []byte(b), Expiration: 86400})
+		if err != nil {print(err.Error())}
+	}
+	c.Get(mykey, &l)
+	return l
+}
+func (c Client) KeyListDelete(kp ...string) (err error) {
+	var mykey = "easymemcache_keys"
+	for _,k := range kp {
+		l := c.KeyList()
+		delete(l,k)
+		b, err := json.Marshal(l)
+		err = c.MClient.Set(&memcache.Item{Key: mykey, Value:  []byte(b), Expiration: 86400})
+		if err != nil {print(err.Error())}
+	}
+	return err
 }
 func (c Client) Set(key string, i interface{}) error {
 	var timeout int32 = 86400
@@ -35,7 +60,7 @@ func (c Client) SetTime(key string, i interface{}, t int32) (err error) {
 		return err
 	}
 	//add it to the list of keys
-	c.KeyList[key] = 1
+	c.KeyList(key)
 	err = c.MClient.Set(&memcache.Item{Key: c.Prefix + key, Value: []byte(b), Expiration: t})
 	return err
 }
@@ -70,13 +95,13 @@ func (c Client) Geti(key string) (i int, err error) {
 	return i, err
 }
 func (c Client) Count() (i int) {
-	return len(c.KeyList)
+	return len(c.KeyList())
 }
 func (c Client) Delete(otherkeys ...string) (err error) {
 	for _,k := range otherkeys {
 		k = strings.Replace(k, " ", "_", -1)
 		err = c.MClient.Delete(c.Prefix+k)
-		delete(c.KeyList, k)
+		c.KeyListDelete(k)
 		if err != nil {return err}
 	}
 	return err
@@ -88,12 +113,12 @@ func (c Client) DeleteLike(s string) (err error) {
 		if err != nil {
 			return err
 		}
-		delete(c.KeyList, k)
+		c.KeyListDelete(k)
 	}
 	return err
 }
 func (c Client) DeleteAll() (err error) {
-	for k := range c.KeyList {
+	for k := range c.KeyList() {
 		err = c.Delete(k)
 		if err != nil {
 			return err
@@ -104,13 +129,13 @@ func (c Client) DeleteAll() (err error) {
 }
 func (c Client) Keys() []string {
 	var keys []string
-	for k := range c.KeyList {
+	for k := range c.KeyList() {
 		keys = append(keys, k)
 	}
 	return keys
 }
 func (c Client) Find(s string) (rl []string) {
-	for i, _ := range c.KeyList {
+	for i, _ := range c.KeyList() {
 		if strings.Contains(i, s) {
 			rl = append(rl, i)
 		}
@@ -118,7 +143,7 @@ func (c Client) Find(s string) (rl []string) {
 	return rl
 }
 func (c Client) StartsWith(s string) (rl []string) {
-	for i, _ := range c.KeyList {
+	for i, _ := range c.KeyList() {
 		if strings.HasPrefix(i, s) {
 			rl = append(rl, i)
 		}
