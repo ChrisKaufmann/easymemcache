@@ -5,11 +5,12 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 	"strings"
 )
-
+var mykey = "easymemcache_keys"
 func New(server string) Client {
 	var c Client
 	c.MClient = memcache.New(server)
 	c.Prefix = ""
+	c.Debug = false
 	kl := make(map[string]int)
 	b, err := json.Marshal(kl)
 	if err != nil {print(err.Error())}
@@ -21,6 +22,7 @@ func New(server string) Client {
 type Client struct {
 	MClient *memcache.Client
 	Prefix string
+	Debug	bool
 }
 
 func (c Client) Print() {
@@ -30,28 +32,37 @@ func (c Client) Print() {
 	}
 }
 func (c Client) KeyList(kp ...string) (l map[string]int) {
-	var mykey = "easymemcache_keys"
-	if len(l)<1 {l=make(map[string]int)}
-	if len(kp) > 0 {
-		var k string
-		k = kp[0]
+	thing, err := c.MClient.Get(mykey)
+	if err != nil {
+		return l
+	}
+	err = json.Unmarshal(thing.Value, &l)
+	for _,k := range kp {
+		if c.Debug  {	print("Adding key: "+k+"\n") }
 		c.Get(mykey, &l)
 		l[k]=1
 		b, err := json.Marshal(l)
 		err = c.MClient.Set(&memcache.Item{Key: mykey, Value:  []byte(b), Expiration: 86400})
 		if err != nil {print(err.Error())}
 	}
-	c.Get(mykey, &l)
 	return l
 }
 func (c Client) KeyListDelete(kp ...string) (err error) {
-	var mykey = "easymemcache_keys"
+	if c.Debug { 
+		print("Printing Keylist before delete\n") 
+		for keyname,_ := range c.KeyList() { print("\t"+keyname+"\n")}
+	}
 	for _,k := range kp {
+		if c.Debug { print("Deleting Key: "+k+"\n") }
 		l := c.KeyList()
 		delete(l,k)
 		b, err := json.Marshal(l)
 		err = c.MClient.Set(&memcache.Item{Key: mykey, Value:  []byte(b), Expiration: 86400})
 		if err != nil {print(err.Error())}
+		if c.Debug {
+			print("Printing Keylist after delete\n")
+			for keyname,_ := range c.KeyList() { print("\t"+keyname+"\n")}
+		}
 	}
 	return err
 }
@@ -132,6 +143,13 @@ func (c Client) DeleteAll() (err error) {
 		}
 	}
 	err=c.MClient.DeleteAll()
+	kl := make(map[string]int)
+    b, err := json.Marshal(kl)
+    if err != nil {
+		print(err.Error());
+		return err
+	}
+	err = c.MClient.Set(&memcache.Item{Key: mykey, Value:  []byte(b), Expiration: 86400})
 	return err
 }
 func (c Client) Keys() []string {
