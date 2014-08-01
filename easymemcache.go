@@ -23,11 +23,11 @@ func (c Client) Print() {
 }
 func (c Client) KeyList(kp ...string) (l map[string]int) {
 	var mykey = "easymemcache_keys"
-	if l == nil {l=make(map[string]int)}
+	if len(l)<1 {l=make(map[string]int)}
+	//if l == nil {l=make(map[string]int)}
 	if len(kp) > 0 {
 		var k string
 		k = kp[0]
-		print("Key "+k+"\n")
 		l = c.KeyList()
 		l[k]=1
 		b, err := json.Marshal(l)
