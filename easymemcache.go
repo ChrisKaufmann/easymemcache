@@ -10,6 +10,11 @@ func New(server string) Client {
 	var c Client
 	c.MClient = memcache.New(server)
 	c.Prefix = ""
+	kl := make(map[string]int)
+	b, err := json.Marshal(kl)
+	if err != nil {print(err.Error())}
+	err = c.MClient.Set(&memcache.Item{Key: "easymemcache_keys", Value:  []byte(b), Expiration: 86400})
+	if err != nil {print(err.Error())}
 	return c
 }
 
@@ -20,15 +25,17 @@ type Client struct {
 
 func (c Client) Print() {
 	print("Prefix:" + c.Prefix + "\n")
+	for k,_ := range c.KeyList() {
+		print("\t"+k+"\n")
+	}
 }
 func (c Client) KeyList(kp ...string) (l map[string]int) {
 	var mykey = "easymemcache_keys"
 	if len(l)<1 {l=make(map[string]int)}
-	//if l == nil {l=make(map[string]int)}
 	if len(kp) > 0 {
 		var k string
 		k = kp[0]
-		l = c.KeyList()
+		c.Get(mykey, &l)
 		l[k]=1
 		b, err := json.Marshal(l)
 		err = c.MClient.Set(&memcache.Item{Key: mykey, Value:  []byte(b), Expiration: 86400})
