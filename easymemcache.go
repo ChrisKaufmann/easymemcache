@@ -40,6 +40,7 @@ func (c Client) KeyList(kp ...string) (l map[string]int) {
 	for _,k := range kp {
 		if c.Debug  {	print("Adding key: "+k+"\n") }
 		c.Get(mykey, &l)
+		if l == nil { l = make(map[string]int) }
 		l[k]=1
 		b, err := json.Marshal(l)
 		err = c.MClient.Set(&memcache.Item{Key: mykey, Value:  []byte(b), Expiration: 86400})
